@@ -1,0 +1,8 @@
+body{
+    display: block;
+    margin: auto;
+}
+
+.card-footer{
+    background-color: #fff;
+}
