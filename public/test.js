@@ -1,0 +1,32 @@
+import { IngredientePadrao } from "./IngredientePadrao.js";
+import { Pao } from "./Pao.js";
+import { CalculadoraIngredientesService } from "./CalculadoraIngredientesService.js";
+export function teste() {
+    var farinhaTrigo = new IngredientePadrao('farinha gold');
+    var agua = new IngredientePadrao('agua');
+    var gelo = new IngredientePadrao('gelo');
+    var sal = new IngredientePadrao('sal');
+    var acucar = new IngredientePadrao('açucar');
+    var fermento = new IngredientePadrao('fermento Seco');
+    var melhorador = new IngredientePadrao('melhorador');
+    var bisnaga = new IngredientePadrao('Bisnaga');
+    var percentualInTotal = [farinhaTrigo, agua, gelo, sal, acucar, fermento, melhorador, bisnaga];
+    var percentualfarinhaTrigo = 100;
+    var percentualagua = 37.5;
+    var percentualgelo = 62.5;
+    var percentualsal = 2;
+    var percentualacucar = 1;
+    var percentualfermento = 0.1;
+    var percentualmelhorador = 1;
+    var percentualbisnaga = 0.2;
+    var percentualTotal = [percentualfarinhaTrigo, percentualagua, percentualgelo, percentualsal, percentualacucar, percentualfermento, percentualmelhorador, percentualbisnaga];
+    var pao;
+    pao = new Pao('Brotinho Gold-manha', 'lorem ipsum', percentualTotal, percentualInTotal);
+    var quantidadeAProduzir = parseFloat(prompt("quantidade a produzir"));
+    var pesoUnitario = parseFloat(prompt("peso unitario"));
+    var percentualAguaeGelo = parseFloat(prompt("percentualAguaeGelo"));
+    var service = new CalculadoraIngredientesService();
+    var resultado = service.calcular(pao, quantidadeAProduzir, pesoUnitario, percentualAguaeGelo);
+    console.log(resultado);
+}
+teste();

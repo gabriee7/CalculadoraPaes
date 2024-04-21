@@ -1,11 +1,11 @@
-class Ingrediente {
-    private name: string;
+export abstract class Ingrediente {
+    private Nome: string;
     
-    constructor(name: string) {
-        this.name = name;
+    constructor(Nome: string) {
+        this.Nome = Nome;
     }
 
-    getName(){
-        return this.name;
+    getNome(){
+        return this.Nome;
     }
 }

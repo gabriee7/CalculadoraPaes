@@ -1,16 +1,6 @@
-class CalculadoraIngredientesService{
-    calcular(quantidade:number, pao:Pao){
-        let pesoUnitario = pao.getPesoUnitario()
-        let pesoMassaPronta = quantidade * pesoUnitario
-        let percentualTrigoMistura = pao.getPercentualTrigoMistura()
-        let pesoTrigo = pesoMassaPronta * percentualTrigoMistura
-
-        let ingredientesPercentual = pao.getIngredientesPercentual();
-        let receitaPronta: [string, number][]=[];
-
-        for(let i=0; i < ingredientesPercentual.length; i++){
-            receitaPronta.push([String(ingredientesPercentual[i][0]),ingredientesPercentual[i][1] * pesoTrigo]);
-        }
-        return receitaPronta;
+import {Pao} from "./Pao";
+export class CalculadoraIngredientesService{
+    calcular(pao:Pao, quantidade:number, pesoUnitario:number, percentualAguaEGelo:number){
+        return pao.calcular(quantidade, pesoUnitario, percentualAguaEGelo);
     }
 }

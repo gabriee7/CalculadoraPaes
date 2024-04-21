@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
+        "module": "es6",   
         "outDir": "./public",
     },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "**/*.spec.ts"]
+    // "include": ["src/**/*"],
+    // "exclude": ["node_modules", "**/*.spec.ts"]
 }
