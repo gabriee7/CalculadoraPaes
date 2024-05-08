@@ -1,6 +1,6 @@
-import { IngredientePadrao } from "./IngredientePadrao.js";
-import { Pao } from "./Pao.js";
-import { CalculadoraIngredientesService } from "./CalculadoraIngredientesService.js";
+import { IngredientePadrao } from "./IngredientePadrao";
+import { Pao } from "./Pao";
+import { CalculadoraIngredientesService } from "./CalculadoraIngredientesService";
 export function teste() {
     var farinhaTrigo = new IngredientePadrao('farinha gold');
     var agua = new IngredientePadrao('agua');

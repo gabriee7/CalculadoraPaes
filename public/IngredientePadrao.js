@@ -13,7 +13,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import { Ingrediente } from "./Ingrediente.js";
+import { Ingrediente } from "./Ingrediente";
 var IngredientePadrao = /** @class */ (function (_super) {
     __extends(IngredientePadrao, _super);
     function IngredientePadrao(nome) {
