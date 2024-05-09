@@ -10,37 +10,63 @@ class PaoDAO {
     }
 
     public function addPao($nome, $descricao, $ingredientes) {
-        $query = "INSERT INTO paes (nome, descricao) VALUES (?, ?)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ss", $nome, $descricao);
-        if (!$stmt->execute()) {
-            throw new Exception('Erro ao adicionar pão: ' . $stmt->error);
-        }
-        $paoId = $stmt->insert_id;
-        $stmt->close();
-
-        $ingredienteDAO = new IngredienteDAO(); 
-
-        foreach ($ingredientes as $ingrediente) {
-            $ingredienteId = $ingrediente['id'];
-            $percentual = $ingrediente['percentual'];
-
-            if (!is_numeric($percentual) || $percentual < 0 || $percentual > 100) {
-                throw new Exception('Percentual de ingrediente inválido.');
-            }
-
-            $query = "INSERT INTO pao_ingredientes (pao_id, ingrediente_id, percentual) VALUES (?, ?, ?)";
+        try {
+            $query = "INSERT INTO pao (nome, descricao) VALUES (?, ?)";
             $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("iid", $paoId, $ingredienteId, $percentual);
+            $stmt->bind_param("ss", $nome, $descricao);
+    
             if (!$stmt->execute()) {
-                throw new Exception('Erro ao adicionar ingrediente ao pão: ' . $stmt->error);
+                error_log("addPao: Erro ao adicionar pão: " . $stmt->error);
+                throw new Exception('Erro ao adicionar pão: ' . $stmt->error);
             }
+    
+            $paoId = $stmt->insert_id;
             $stmt->close();
+    
+            $query = "INSERT INTO pao_ingrediente (pao_id, ingrediente_id, percentual) VALUES (?, ?, ?)";
+            $stmt = $this->conn->prepare($query);
+    
+            foreach ($ingredientes as $ingrediente) {
+                $ingredienteNome = $ingrediente['ingrediente'];
+                $percentual = $ingrediente['percentual'];
+
+                $query = "SELECT id FROM ingrediente WHERE nome = ?";
+                $ingredientStmt = $this->conn->prepare($query);
+                $ingredientStmt->bind_param("s", $ingredienteNome);
+
+                if ($ingredientStmt->execute()) {
+                    $result = $ingredientStmt->get_result();
+                    if ($row = $result->fetch_assoc()) {
+                        $ingredienteId = (int)$row['id'];
+                    } else {
+                        throw new Exception("Ingrediente com nome '{$ingredienteNome}' não encontrado.");
+                    }
+                } else {
+                    error_log("Erro ao buscar ingrediente_id: " . $ingredientStmt->error);
+                    throw new Exception('Erro ao buscar ingrediente_id: ' . $ingredientStmt->error);
+                }
+
+                $ingredientStmt->close();
+
+                $stmt->bind_param("iid", $paoId, $ingredienteId, $percentual);
+                if (!$stmt->execute()) {
+                    error_log("addPao: Erro ao inserir ingrediente: " . $stmt->error);
+                    throw new Exception('Erro ao adicionar ingrediente: ' . $stmt->error);
+                }
+
+            }
+
+            $stmt->close();
+
+            error_log("addPao: Pão e ingredientes adicionados com sucesso.");
+        } catch (Exception $e) {
+            error_log("addPao: Erro ao adicionar pão: " . $e->getMessage());
+            throw $e;
         }
     }
-
+    
     public function getPao($id) {
-        $query = "SELECT * FROM paes WHERE id = ?";
+        $query = "SELECT * FROM pao WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id);
         if (!$stmt->execute()) {
@@ -77,7 +103,7 @@ class PaoDAO {
     }
 
     public function listPaes() {
-        $query = "SELECT * FROM paes";
+        $query = "SELECT * FROM pao";
         $result = $this->conn->query($query);
         if (!$result) {
             throw new Exception('Erro ao listar pães: ' . $this->conn->error);

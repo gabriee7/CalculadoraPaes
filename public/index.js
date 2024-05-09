@@ -58,7 +58,7 @@ function loadIngredientes() {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 6, , 7]);
-                    return [4 /*yield*/, fetch("http://localhost/api/app.php/ingredientes")];
+                    return [4 /*yield*/, fetch("http://localhost/api/app.php/ingrediente")];
                 case 2:
                     response = _a.sent();
                     if (!response.ok) return [3 /*break*/, 4];
@@ -67,7 +67,6 @@ function loadIngredientes() {
                     ingredientes = _a.sent();
                     datalist.innerHTML = "";
                     ingredientes.forEach(function (ingrediente) {
-                        console.log(ingrediente);
                         var option = document.createElement("option");
                         option.value = ingrediente.nome;
                         datalist.appendChild(option);
@@ -102,7 +101,7 @@ function addIngrediente() {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, fetch("http://localhost/api/app.php/ingredientes", {
+                    return [4 /*yield*/, fetch("http://localhost/api/app.php/ingrediente", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -131,3 +130,74 @@ function addIngrediente() {
         });
     });
 }
+function addPao() {
+    return __awaiter(this, void 0, void 0, function () {
+        var nomePaoInput, descricaoPaoInput, table, nomePao, descricaoPao, rows, ingredientes, _i, rows_1, row, cells, ingredienteInput, percentualInput, ingrediente, percentual, response;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    nomePaoInput = document.getElementById("inputNomePao");
+                    descricaoPaoInput = document.getElementById("inputDescricaoPao");
+                    table = document.getElementById("myTable");
+                    if (!nomePaoInput || !descricaoPaoInput || !table) {
+                        console.error("Elementos de entrada ou tabela não encontrados.");
+                        alert("Erro: Elementos de entrada ou tabela não encontrados.");
+                        return [2 /*return*/];
+                    }
+                    nomePao = nomePaoInput.value;
+                    descricaoPao = descricaoPaoInput.value;
+                    if (nomePao.trim() === "") {
+                        alert("Por favor, insira um nome para o pão.");
+                        return [2 /*return*/];
+                    }
+                    if (descricaoPao.trim() === "") {
+                        alert("Por favor, insira uma descrição para o pão.");
+                        return [2 /*return*/];
+                    }
+                    rows = Array.from(table.querySelectorAll("tr"));
+                    ingredientes = [];
+                    for (_i = 0, rows_1 = rows; _i < rows_1.length; _i++) {
+                        row = rows_1[_i];
+                        cells = row.querySelectorAll("td");
+                        if (cells.length < 2) {
+                            continue;
+                        }
+                        ingredienteInput = cells[0].querySelector("input");
+                        percentualInput = cells[1].querySelector("input");
+                        if (!ingredienteInput || !percentualInput) {
+                            continue;
+                        }
+                        ingrediente = ingredienteInput.value;
+                        percentual = parseFloat(percentualInput.value);
+                        if (ingrediente.trim() !== "" && !isNaN(percentual)) {
+                            ingredientes.push({ ingrediente: ingrediente, percentual: percentual });
+                        }
+                    }
+                    return [4 /*yield*/, fetch("http://localhost/api/app.php/pao", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                nome: nomePao,
+                                descricao: descricaoPao,
+                                ingredientes: ingredientes,
+                            }),
+                        })];
+                case 1:
+                    response = _a.sent();
+                    if (response.ok) {
+                        alert("Pão adicionado com sucesso.");
+                        nomePaoInput.value = "";
+                        descricaoPaoInput.value = "";
+                    }
+                    else {
+                        alert("Erro ao adicionar o pão.");
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+var btnSalvarPao = document.getElementById("btnSalvarPao");
+btnSalvarPao.addEventListener("click", addPao);

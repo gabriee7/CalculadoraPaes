@@ -9,7 +9,7 @@ class IngredienteDAO {
     }
 
     public function addIngrediente($nome) {
-        $query = "INSERT INTO ingredientes (nome) VALUES (?)";
+        $query = "INSERT INTO ingrediente (nome) VALUES (?)";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("s", $nome);
         if (!$stmt->execute()) {
@@ -19,7 +19,7 @@ class IngredienteDAO {
     }
 
     public function getIngrediente($id) {
-        $query = "SELECT * FROM ingredientes WHERE id = ?";
+        $query = "SELECT * FROM ingrediente WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id);
         if (!$stmt->execute()) {
@@ -32,7 +32,7 @@ class IngredienteDAO {
     }
 
     public function listIngredientes() {
-        $query = "SELECT * FROM ingredientes";
+        $query = "SELECT * FROM ingrediente";
         $result = $this->conn->query($query);
         if (!$result) {
             throw new Exception('Erro ao listar ingredientes: ' . $this->conn->error);
