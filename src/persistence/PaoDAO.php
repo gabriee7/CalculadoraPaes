@@ -66,40 +66,82 @@ class PaoDAO {
     }
     
     public function getPao($id) {
-        $query = "SELECT * FROM pao WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $id);
-        if (!$stmt->execute()) {
-            throw new Exception('Erro ao obter pão: ' . $stmt->error);
-        }
-        $result = $stmt->get_result();
-        $pao = $result->fetch_assoc();
-        $stmt->close();
-
-        if (!$pao) {
+        try {
+            $query = "SELECT * FROM pao WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("i", $id);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Erro ao obter pão: ' . $stmt->error);
+            }
+            
+            $result = $stmt->get_result();
+            $pao = $result->fetch_assoc();
+            $stmt->close();
+            
+            if (!$pao) {
+                return null;
+            }
+            
+            $query = "SELECT i.id, i.nome, pi.percentual
+                      FROM pao_ingrediente pi
+                      JOIN ingrediente i ON pi.ingrediente_id = i.id
+                      WHERE pi.pao_id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("i", $id);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Erro ao obter ingredientes associados: ' . $stmt->error);
+            }
+            
+            $result = $stmt->get_result();
+            $pao['ingredientes'] = [];
+            
+            while ($row = $result->fetch_assoc()) {
+                $pao['ingredientes'][] = [
+                    'id' => $row['id'],
+                    'nome' => $row['nome'],
+                    'percentual' => $row['percentual']
+                ];
+            }
+            
+            $stmt->close();
+            return $pao;
+            
+        } catch (Exception $e) {
+            error_log($e->getMessage());
             return null;
         }
+    }
 
+     public function getIngredientesByPaoId($id) {
         $query = "SELECT i.id, i.nome, pi.percentual
-                  FROM pao_ingredientes pi
-                  JOIN ingredientes i ON pi.ingrediente_id = i.id
+                  FROM pao_ingrediente pi
+                  JOIN ingrediente i ON pi.ingrediente_id = i.id
                   WHERE pi.pao_id = ?";
+        
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $id);
+        
         if (!$stmt->execute()) {
-            throw new Exception('Erro ao obter ingredientes associados: ' . $stmt->error);
+            throw new Exception('Erro ao obter ingredientes do pão: ' . $stmt->error);
         }
+        
         $result = $stmt->get_result();
-        $pao['ingredientes'] = [];
+        
+        $ingredientes = [];
+        
         while ($row = $result->fetch_assoc()) {
-            $pao['ingredientes'][] = [
+            $ingredientes[] = [
                 'id' => $row['id'],
                 'nome' => $row['nome'],
                 'percentual' => $row['percentual']
             ];
         }
+        
         $stmt->close();
-        return $pao;
+        
+        return count($ingredientes) > 0 ? $ingredientes : null;
     }
 
     public function listPaes() {
@@ -129,6 +171,39 @@ class PaoDAO {
             echo json_encode([]);
         }
     }
+
+    public function getIngredientesByPaoName($nomePao) {
+        $query = "SELECT i.id, i.nome, pi.percentual
+                  FROM pao_ingrediente pi
+                  JOIN ingrediente i ON pi.ingrediente_id = i.id
+                  JOIN pao p ON pi.pao_id = p.id
+                  WHERE p.nome = ?";
+    
+        $stmt = $this->conn->prepare($query);
+    
+        $stmt->bind_param("s", $nomePao);
+    
+        if (!$stmt->execute()) {
+            throw new Exception('Erro ao obter ingredientes do pão por nome: ' . $stmt->error);
+        }
+    
+        $result = $stmt->get_result();
+    
+        $ingredientes = [];
+    
+        while ($row = $result->fetch_assoc()) {
+            $ingredientes[] = [
+                'id' => $row['id'],
+                'nome' => $row['nome'],
+                'percentual' => $row['percentual']
+            ];
+        }
+    
+        $stmt->close();
+    
+        return count($ingredientes) > 0 ? $ingredientes : null;
+    }
+    
 
     public function __destruct() {
         $this->conn->close();

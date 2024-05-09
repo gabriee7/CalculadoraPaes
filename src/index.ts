@@ -2,33 +2,19 @@ document.getElementById("addRow").addEventListener("click", function (ev) {
     ev.preventDefault();
     const table = document.getElementById("myTable") as HTMLTableElement;
     
-    // Adiciona uma nova linha à tabela
     const row = table.insertRow(-1);
     
-    // Cria as células para a nova linha
     const cell1 = row.insertCell(0);
     const cell2 = row.insertCell(1);
     const cell3 = row.insertCell(2);
     
-    // Adiciona o input para o ingrediente na primeira célula
-    cell1.innerHTML = `
-        <input id="nomeIngredienteEscolha-1" list="ingredientes" class="form-control" placeholder="Escolha">
-        <datalist id="ingredientes"></datalist>
-    `;
+    cell1.innerHTML = `<input id="nomeIngredienteEscolha-1" list="ingredientes" class="form-control" placeholder="Escolha"><datalist id="ingredientes"></datalist>`;
     
-    // Adiciona o input para o percentual na segunda célula
-    cell2.innerHTML = `
-        <input type="number" step="0.01" class="form-control" placeholder="Percentual">
-    `;
+    cell2.innerHTML = `<input type="number" step="0.01" class="form-control" placeholder="Percentual">`;
     
-    // Adiciona o botão para excluir a linha na terceira célula
-    cell3.innerHTML = `
-        <button type="button" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>
-    `;
+    cell3.innerHTML = ` <button type="button" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>`;
     
-    // Adiciona um evento de clique ao botão para excluir a linha
     cell3.querySelector("button").addEventListener("click", function () {
-        // Remove a linha associada ao botão
         row.remove();
     });
 });
@@ -219,9 +205,13 @@ async function renderPaes() {
         } else {
             paes.forEach(pao => {
                 const paoHTML = `
-                    <div class="col-12 col-sm-6 col-lg-4 p-1 card"><div class="card-body card-${pao.id}"><h5 class="card-title"><strong>${pao.nome}</strong></h5><p class="card-text">${pao.descricao}</p></div><div class="card-footer"><button id="pao-${pao.id}" class="btn btn-secondary btn-sm btn-block">Abrir</button></div></div>`;
+                    <div class="col-12 col-sm-6 col-lg-4 p-1 card"><div class="card-body card-${pao.id}"><h5 class="card-title"><strong>${pao.nome}</strong></h5><p class="card-text">${pao.descricao}</p></div><div class="card-footer"><button id="pao-${pao.nome}" class="btn btn-secondary btn-sm btn-block" data-toggle="modal" data-target="#modalMostrarIngredientes">Abrir</button></div></div>`;
                     
                 container.insertAdjacentHTML('beforeend', paoHTML);
+
+                document.getElementById(`pao-${pao.nome}`).addEventListener('click', async function() {
+                    await mostrarIngredientesPao(pao.nome);
+                });
             });
         }
     } catch (error) {
@@ -230,3 +220,40 @@ async function renderPaes() {
 }
 
 window.addEventListener('load', renderPaes);
+
+
+async function mostrarIngredientesPao(paoNome) {
+    try {
+        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/nome/${paoNome}`);
+
+        if (!response.ok) {
+            console.error('Erro ao buscar ingredientes do pão:', response.statusText);
+            return;
+        }
+
+        const ingredientes = await response.json();
+
+        const tableBody = document.getElementById('tableIngredientes').querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        ingredientes.forEach(ingrediente => {
+            const row = document.createElement('tr');
+            
+            const cellNome = document.createElement('td');
+            cellNome.textContent = ingrediente.nome;
+            row.appendChild(cellNome);
+            
+            const cellPercentual = document.createElement('td');
+            cellPercentual.textContent = ingrediente.percentual;
+            row.appendChild(cellPercentual);
+            
+            tableBody.appendChild(row);
+        });
+
+        const modalTitle = document.getElementById('modalTitle');
+        modalTitle.textContent = `${paoNome}`;
+
+    } catch (error) {
+        console.error('Erro ao mostrar os ingredientes do pão:', error);
+    }
+}

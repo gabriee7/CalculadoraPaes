@@ -37,21 +37,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 document.getElementById("addRow").addEventListener("click", function (ev) {
     ev.preventDefault();
     var table = document.getElementById("myTable");
-    // Adiciona uma nova linha à tabela
     var row = table.insertRow(-1);
-    // Cria as células para a nova linha
     var cell1 = row.insertCell(0);
     var cell2 = row.insertCell(1);
     var cell3 = row.insertCell(2);
-    // Adiciona o input para o ingrediente na primeira célula
-    cell1.innerHTML = "\n        <input id=\"nomeIngredienteEscolha-1\" list=\"ingredientes\" class=\"form-control\" placeholder=\"Escolha\">\n        <datalist id=\"ingredientes\"></datalist>\n    ";
-    // Adiciona o input para o percentual na segunda célula
-    cell2.innerHTML = "\n        <input type=\"number\" step=\"0.01\" class=\"form-control\" placeholder=\"Percentual\">\n    ";
-    // Adiciona o botão para excluir a linha na terceira célula
-    cell3.innerHTML = "\n        <button type=\"button\" class=\"btn btn-danger\"><i class=\"bi bi-trash-fill\"></i></button>\n    ";
-    // Adiciona um evento de clique ao botão para excluir a linha
+    cell1.innerHTML = "<input id=\"nomeIngredienteEscolha-1\" list=\"ingredientes\" class=\"form-control\" placeholder=\"Escolha\"><datalist id=\"ingredientes\"></datalist>";
+    cell2.innerHTML = "<input type=\"number\" step=\"0.01\" class=\"form-control\" placeholder=\"Percentual\">";
+    cell3.innerHTML = " <button type=\"button\" class=\"btn btn-danger\"><i class=\"bi bi-trash-fill\"></i></button>";
     cell3.querySelector("button").addEventListener("click", function () {
-        // Remove a linha associada ao botão
         row.remove();
     });
 });
@@ -261,8 +254,20 @@ function renderPaes() {
                     }
                     else {
                         paes.forEach(function (pao) {
-                            var paoHTML = "\n                    <div class=\"col-12 col-sm-6 col-lg-4 p-1 card\"><div class=\"card-body card-".concat(pao.id, "\"><h5 class=\"card-title\"><strong>").concat(pao.nome, "</strong></h5><p class=\"card-text\">").concat(pao.descricao, "</p></div><div class=\"card-footer\"><button id=\"pao-").concat(pao.id, "\" class=\"btn btn-secondary btn-sm btn-block\">Abrir</button></div></div>");
+                            var paoHTML = "\n                    <div class=\"col-12 col-sm-6 col-lg-4 p-1 card\"><div class=\"card-body card-".concat(pao.id, "\"><h5 class=\"card-title\"><strong>").concat(pao.nome, "</strong></h5><p class=\"card-text\">").concat(pao.descricao, "</p></div><div class=\"card-footer\"><button id=\"pao-").concat(pao.nome, "\" class=\"btn btn-secondary btn-sm btn-block\" data-toggle=\"modal\" data-target=\"#modalMostrarIngredientes\">Abrir</button></div></div>");
                             container_1.insertAdjacentHTML('beforeend', paoHTML);
+                            document.getElementById("pao-".concat(pao.nome)).addEventListener('click', function () {
+                                return __awaiter(this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4 /*yield*/, mostrarIngredientesPao(pao.nome)];
+                                            case 1:
+                                                _a.sent();
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                });
+                            });
                         });
                     }
                     return [3 /*break*/, 4];
@@ -276,3 +281,44 @@ function renderPaes() {
     });
 }
 window.addEventListener('load', renderPaes);
+function mostrarIngredientesPao(paoNome) {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, ingredientes, tableBody_1, modalTitle, error_4;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 3, , 4]);
+                    return [4 /*yield*/, fetch("http://localhost/api/app.php/pao_ingredientes/nome/".concat(paoNome))];
+                case 1:
+                    response = _a.sent();
+                    if (!response.ok) {
+                        console.error('Erro ao buscar ingredientes do pão:', response.statusText);
+                        return [2 /*return*/];
+                    }
+                    return [4 /*yield*/, response.json()];
+                case 2:
+                    ingredientes = _a.sent();
+                    tableBody_1 = document.getElementById('tableIngredientes').querySelector('tbody');
+                    tableBody_1.innerHTML = '';
+                    ingredientes.forEach(function (ingrediente) {
+                        var row = document.createElement('tr');
+                        var cellNome = document.createElement('td');
+                        cellNome.textContent = ingrediente.nome;
+                        row.appendChild(cellNome);
+                        var cellPercentual = document.createElement('td');
+                        cellPercentual.textContent = ingrediente.percentual;
+                        row.appendChild(cellPercentual);
+                        tableBody_1.appendChild(row);
+                    });
+                    modalTitle = document.getElementById('modalTitle');
+                    modalTitle.textContent = "".concat(paoNome);
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_4 = _a.sent();
+                    console.error('Erro ao mostrar os ingredientes do pão:', error_4);
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
