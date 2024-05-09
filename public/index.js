@@ -37,11 +37,23 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 document.getElementById("addRow").addEventListener("click", function (ev) {
     ev.preventDefault();
     var table = document.getElementById("myTable");
+    // Adiciona uma nova linha à tabela
     var row = table.insertRow(-1);
+    // Cria as células para a nova linha
     var cell1 = row.insertCell(0);
     var cell2 = row.insertCell(1);
-    cell1.innerHTML = '<td><input id="nomeIngredienteEscolha-1" list="ingredientes" class="form-control" placeholder="Escolha"><datalist id="ingredientes"></datalist></td><td>';
-    cell2.innerHTML = ' <input type="number" step="0.01" class="form-control" placeholder="Percentual"></td>';
+    var cell3 = row.insertCell(2);
+    // Adiciona o input para o ingrediente na primeira célula
+    cell1.innerHTML = "\n        <input id=\"nomeIngredienteEscolha-1\" list=\"ingredientes\" class=\"form-control\" placeholder=\"Escolha\">\n        <datalist id=\"ingredientes\"></datalist>\n    ";
+    // Adiciona o input para o percentual na segunda célula
+    cell2.innerHTML = "\n        <input type=\"number\" step=\"0.01\" class=\"form-control\" placeholder=\"Percentual\">\n    ";
+    // Adiciona o botão para excluir a linha na terceira célula
+    cell3.innerHTML = "\n        <button type=\"button\" class=\"btn btn-danger\"><i class=\"bi bi-trash-fill\"></i></button>\n    ";
+    // Adiciona um evento de clique ao botão para excluir a linha
+    cell3.querySelector("button").addEventListener("click", function () {
+        // Remove a linha associada ao botão
+        row.remove();
+    });
 });
 document.addEventListener("DOMContentLoaded", function () {
     var btnAddIngrediente = document.getElementById("btnSalvarIngrediente");
@@ -98,6 +110,10 @@ function addIngrediente() {
                         alert("Por favor, insira um nome para o ingrediente.");
                         return [2 /*return*/];
                     }
+                    else if (!nomeIngredienteInput.checkValidity()) {
+                        alert("A primeira letra do nome do ingrediente deve ser maiuscula.");
+                        return [2 /*return*/];
+                    }
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
@@ -115,6 +131,7 @@ function addIngrediente() {
                     if (response.ok) {
                         alert("Ingrediente adicionado com sucesso.");
                         nomeIngredienteInput.value = "";
+                        loadIngredientes();
                     }
                     else {
                         alert("Erro ao adicionar o ingrediente.");
@@ -140,8 +157,11 @@ function addPao() {
                     descricaoPaoInput = document.getElementById("inputDescricaoPao");
                     table = document.getElementById("myTable");
                     if (!nomePaoInput || !descricaoPaoInput || !table) {
-                        console.error("Elementos de entrada ou tabela não encontrados.");
                         alert("Erro: Elementos de entrada ou tabela não encontrados.");
+                        return [2 /*return*/];
+                    }
+                    else if (!nomePaoInput.checkValidity()) {
+                        alert("A primeira letra do nome do pão deve ser maiuscula.");
                         return [2 /*return*/];
                     }
                     nomePao = nomePaoInput.value;
@@ -169,9 +189,15 @@ function addPao() {
                         }
                         ingrediente = ingredienteInput.value;
                         percentual = parseFloat(percentualInput.value);
-                        if (ingrediente.trim() !== "" && !isNaN(percentual)) {
-                            ingredientes.push({ ingrediente: ingrediente, percentual: percentual });
+                        if (percentualInput.value.trim() === "") {
+                            alert("Por favor, insira um percentual válido para o ingrediente.");
+                            return [2 /*return*/];
                         }
+                        if (isNaN(percentual)) {
+                            alert("Por favor, insira um percentual válido para o ingrediente.");
+                            return [2 /*return*/];
+                        }
+                        ingredientes.push({ ingrediente: ingrediente, percentual: percentual });
                     }
                     return [4 /*yield*/, fetch("http://localhost/api/app.php/pao", {
                             method: "POST",
@@ -190,6 +216,7 @@ function addPao() {
                         alert("Pão adicionado com sucesso.");
                         nomePaoInput.value = "";
                         descricaoPaoInput.value = "";
+                        renderPaes();
                     }
                     else {
                         alert("Erro ao adicionar o pão.");
@@ -201,3 +228,51 @@ function addPao() {
 }
 var btnSalvarPao = document.getElementById("btnSalvarPao");
 btnSalvarPao.addEventListener("click", addPao);
+function renderPaes() {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, contentType, responseText, paes, container_1, h4, error_3;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 3, , 4]);
+                    return [4 /*yield*/, fetch('http://localhost/api/app.php/pao')];
+                case 1:
+                    response = _a.sent();
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar os pães');
+                    }
+                    contentType = response.headers.get('Content-Type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Resposta não é JSON');
+                    }
+                    return [4 /*yield*/, response.text()];
+                case 2:
+                    responseText = _a.sent();
+                    paes = JSON.parse(responseText);
+                    container_1 = document.querySelector('.cards-paes');
+                    container_1.innerHTML = "";
+                    if (!container_1) {
+                        throw new Error('Container para os pães não encontrado');
+                    }
+                    if (paes.length === 0) {
+                        h4 = document.createElement('h4');
+                        h4.textContent = "Nenhum pão encontrado.";
+                        container_1.appendChild(h4);
+                    }
+                    else {
+                        paes.forEach(function (pao) {
+                            var paoHTML = "\n                    <div class=\"col-12 col-sm-6 col-lg-4 p-1 card\"><div class=\"card-body card-".concat(pao.id, "\"><h5 class=\"card-title\"><strong>").concat(pao.nome, "</strong></h5><p class=\"card-text\">").concat(pao.descricao, "</p></div><div class=\"card-footer\"><button id=\"pao-").concat(pao.id, "\" class=\"btn btn-secondary btn-sm btn-block\">Abrir</button></div></div>");
+                            container_1.insertAdjacentHTML('beforeend', paoHTML);
+                        });
+                    }
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_3 = _a.sent();
+                    console.error('Erro ao renderizar os pães:', error_3);
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+window.addEventListener('load', renderPaes);

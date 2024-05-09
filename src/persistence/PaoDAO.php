@@ -115,6 +115,21 @@ class PaoDAO {
         return $paes;
     }
 
+    public function getPaes() {
+        $query = "SELECT id, nome, descricao FROM pao";
+        $result = $this->conn->query($query);
+    
+        if ($result->num_rows > 0) {
+            $paes = [];
+            while ($row = $result->fetch_assoc()) {
+                $paes[] = $row;
+            }
+            echo json_encode($paes);
+        } else {
+            echo json_encode([]);
+        }
+    }
+
     public function __destruct() {
         $this->conn->close();
     }

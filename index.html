@@ -34,7 +34,7 @@
                 <form id="formIngrediente">
                     <div class="form-group">
                       <label for="nomeIngrediente">Nome</label>
-                      <input type="text" class="form-control" id="nomeIngrediente" placeholder="Ex: Sal, Açúcar">
+                      <input type="text" class="form-control" id="nomeIngrediente" placeholder="Ex: Sal, Açúcar" pattern="[A-Z][a-z]*">
                     </div>
                   </form>
             </div>
@@ -60,16 +60,16 @@
                 <form id="formPao">
                     <div class="form-group">
                         <label for="inputNomePao">Nome</label>
-                        <input type="text" class="form-control" id="inputNomePao" placeholder="Ex: Brioche...">
+                        <input type="text" class="form-control" id="inputNomePao" placeholder="Ex: Brioche..." pattern="[A-Z][a-z]*">
                         <label class="mt-3" for="inputDescricaoPao">Descrição</label>
                         <textarea class="form-control" id="inputDescricaoPao" placeholder="Informação úteis de processo." rows="3"></textarea>
                     </div>
-                    <!-- <div class="conr"> -->
                     <table class="table" id="myTable">
                         <thead>
                             <tr>
                                 <th>Ingrediente</th>
                                 <th>Percentual (%)</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,7 +86,6 @@
                         </tbody>
                     </table>
                     <button class="btn btn-primary" id="addRow">+</button>
-                    <!-- </div> -->
                   </form>
 
                   
@@ -99,21 +98,15 @@
         </div>
     </div>
 
-        <div class="card-group">
-            <div class="container">
-                <div class="row">
-                    <div class="col-12 col-sm-6 col-lg-4 card">
-                    <div class="card-body">
-                        <h5 class="card-title">Nome Pão</h5>
-                        <p class="card-text">Descrição</p>
-                    </div>
-                    <div class="card-footer">
-                        <button class="btn btn-secondary btn-block">Abrir</button>
-                    </div>
-                    </div>                    
-                </div>
-            </div>
-          </div>
+    <!-- CARDS Pães -->
+    <div class="card-group">
+        <div class="container">
+            <div class="row cards-paes"></div>                    
+        </div>
+    </div>
+
+
+  
 
           <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
