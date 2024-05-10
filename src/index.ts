@@ -1,3 +1,5 @@
+import { Pao } from "./Pao.js";
+
 document.getElementById("addRow").addEventListener("click", function (ev) {
     ev.preventDefault();
     const table = document.getElementById("myTable") as HTMLTableElement;
@@ -59,10 +61,11 @@ async function addIngrediente(){
     if (nomeIngrediente.trim() === "") {
         alert("Por favor, insira um nome para o ingrediente.");
         return;
-    }else if(!nomeIngredienteInput.checkValidity()){
-        alert("A primeira letra do nome do ingrediente deve ser maiuscula.")
-        return
     }
+    // else if(!nomeIngredienteInput.checkValidity()){
+    //     alert("A primeira letra do nome do ingrediente deve ser maiuscula.")
+    //     return
+    // }
 
     try {
         const response = await fetch("http://localhost/api/app.php/ingrediente", {
@@ -98,10 +101,11 @@ async function addPao() {
     if (!nomePaoInput || !descricaoPaoInput || !table) {
         alert("Erro: Elementos de entrada ou tabela não encontrados.");
         return;
-    }else if(!nomePaoInput.checkValidity()){
-        alert("A primeira letra do nome do pão deve ser maiuscula.");
-        return;
     }
+    // else if(!nomePaoInput.checkValidity()){
+    //     alert("A primeira letra do nome do pão deve ser maiuscula.");
+    //     return;
+    // }
 
     const nomePao = nomePaoInput.value;
     const descricaoPao = descricaoPaoInput.value;
@@ -224,7 +228,7 @@ window.addEventListener('load', renderPaes);
 
 async function mostrarIngredientesPao(paoNome) {
     try {
-        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/nome/${paoNome}`);
+        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/18`);
 
         if (!response.ok) {
             console.error('Erro ao buscar ingredientes do pão:', response.statusText);
@@ -257,3 +261,109 @@ async function mostrarIngredientesPao(paoNome) {
         console.error('Erro ao mostrar os ingredientes do pão:', error);
     }
 }
+
+// Função para obter um objeto Pao com base no nome do pão
+async function obterPaoPorNome(paoNome) {
+    try {
+        // Fazer uma requisição GET para a API com o nome do pão
+        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/nome/${paoNome}`);
+        
+        // Verificar se a resposta está OK
+        if (!response.ok) {
+            throw new Error('Erro ao buscar o pão: ' + response.statusText);
+        }
+
+        // Converter a resposta para JSON
+        const paoData = await response.json();
+
+        // Verificar se paoData é um array não vazio
+        if (!Array.isArray(paoData) || paoData.length === 0) {
+            throw new Error('Dados de pão inválidos ou ausentes');
+        }
+
+        // Inicializar arrays para armazenar os ingredientes e percentuais
+        const ingredientes = [];
+        const percentuais = [];
+
+        // Mapear `paoData` para criar os arrays de `ingredientes` e `percentuais`
+        paoData.forEach(ingrediente => {
+            ingredientes.push({ nome: ingrediente.nome });
+            percentuais.push(ingrediente.percentual);
+        });
+
+        // Criar um objeto `Pao` com os dados recebidos
+        const pao = new Pao(paoNome, '', percentuais, ingredientes);
+
+        // Retornar o objeto `Pao`
+        return pao;
+
+    } catch (error) {
+        console.error('Erro ao obter pão por nome:', error);
+        return null; // Retornar null em caso de erro
+    }
+}
+
+// Função para realizar o cálculo dos ingredientes ao clicar no botão "Calcular"
+async function calcularIngredientes() {
+    // Obter os valores de entrada do formulário
+    const quantidadePaes = parseFloat((document.getElementById('quantidadePaes') as HTMLInputElement).value);
+    const pesoUnitario = parseFloat((document.getElementById('pesoUnitario') as HTMLInputElement).value);
+    const percentualAguaGelo = parseFloat((document.getElementById('percentualAguaGelo') as HTMLInputElement).value);
+
+    // Obter o nome do pão atual no modal
+    const paoNome = document.getElementById('modalTitle').textContent;
+
+    // Fazer uma requisição GET para a API com o nome do pão para obter os ingredientes
+    try {
+        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/18`);
+        
+        // Verificar se a resposta está OK
+        if (!response.ok) {
+            throw new Error('Erro ao buscar ingredientes: ' + response.statusText);
+        }
+        
+
+        // Converter a resposta para JSON
+        const ingredientesData = await response.json();
+        console.log('Ingredientes data:', ingredientesData, response.statusText);
+
+        // // Verificar se a resposta contém dados válidos
+        // if (!Array.isArray(ingredientesData) || ingredientesData.length === 0) {
+        //     throw new Error('Dados de ingredientes inválidos ou ausentes');
+        // }
+
+        // Inicializar um array para armazenar os resultados
+        const resultados = [];
+
+        // Calcular os valores dos ingredientes
+        const pesoFarinhaDeTrigo = 20559.67 * (quantidadePaes * pesoUnitario / (570 * 56));
+        const proporcaoAguaEGelo = percentualAguaGelo / 100;
+        const pesoAguaEGelo = proporcaoAguaEGelo * pesoFarinhaDeTrigo;
+
+        // Calcular as quantidades dos ingredientes com base nos dados obtidos
+        ingredientesData.forEach(ingrediente => {
+            let quantidade;
+            const percentual = ingrediente.percentual / 100;
+
+            if (ingrediente.nome.toLowerCase() === 'água' || ingrediente.nome.toLowerCase() === 'gelo') {
+                quantidade = percentual * pesoAguaEGelo;
+            } else {
+                quantidade = percentual * pesoFarinhaDeTrigo;
+            }
+
+            resultados.push({
+                nome: ingrediente.nome,
+                quantidade: quantidade.toFixed(2)
+            });
+        });
+
+        // Mostrar o resultado no console
+        console.log('Resultados do cálculo dos ingredientes:', resultados);
+    } catch (error) {
+        console.error('Erro ao calcular ingredientes:', error);
+    }
+}
+
+// Adicione um evento de clique ao botão "Calcular"
+const botaoCalcular = document.getElementById('btnPercentualAguaGelo');
+botaoCalcular.addEventListener('click', calcularIngredientes);

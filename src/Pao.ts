@@ -34,7 +34,8 @@ export class Pao {
         let proporcaoAguaEGelo = percentualAguaEGelo / 100;
         let pesoAguaEGelo = proporcaoAguaEGelo * pesoFarinhaDeTrigo;
         let resultado:[Ingrediente, number][] = [];
-
+        console.log(this.ingredientes);
+        
         this.ingredientes.forEach(elem => {
             if(this.compararStrings(elem[0].getNome(), 'agua')){
                 resultado.push([elem[0], elem[1] * pesoAguaEGelo]);

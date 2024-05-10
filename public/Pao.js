@@ -23,6 +23,7 @@ var Pao = /** @class */ (function () {
         var proporcaoAguaEGelo = percentualAguaEGelo / 100;
         var pesoAguaEGelo = proporcaoAguaEGelo * pesoFarinhaDeTrigo;
         var resultado = [];
+        console.log(this.ingredientes);
         this.ingredientes.forEach(function (elem) {
             if (_this.compararStrings(elem[0].getNome(), 'agua')) {
                 resultado.push([elem[0], elem[1] * pesoAguaEGelo]);
