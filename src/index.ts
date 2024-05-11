@@ -209,12 +209,12 @@ async function renderPaes() {
         } else {
             paes.forEach(pao => {
                 const paoHTML = `
-                    <div class="col-12 col-sm-6 col-lg-4 p-1 card"><div class="card-body card-${pao.id}"><h5 class="card-title"><strong>${pao.nome}</strong></h5><p class="card-text">${pao.descricao}</p></div><div class="card-footer"><button id="pao-${pao.nome}" class="btn btn-secondary btn-sm btn-block" data-toggle="modal" data-target="#modalMostrarIngredientes">Abrir</button></div></div>`;
+                    <div class="col-12 col-sm-6 col-lg-4 p-1 card"><div class="card-body card-${pao.id}"><h5 class="card-title"><strong>${pao.nome}</strong></h5><p class="card-text">${pao.descricao}</p></div><div class="card-footer"><button id="pao-${pao.id}" class="btn btn-secondary btn-sm btn-block" data-toggle="modal" data-target="#modalMostrarIngredientes">Abrir</button></div></div>`;
                     
                 container.insertAdjacentHTML('beforeend', paoHTML);
 
-                document.getElementById(`pao-${pao.nome}`).addEventListener('click', async function() {
-                    await mostrarIngredientesPao(pao.nome);
+                document.getElementById(`pao-${pao.id}`).addEventListener('click', async function() {
+                    await mostrarIngredientesPao(pao.id, pao.nome);
                 });
             });
         }
@@ -226,9 +226,9 @@ async function renderPaes() {
 window.addEventListener('load', renderPaes);
 
 
-async function mostrarIngredientesPao(paoNome) {
+async function mostrarIngredientesPao(paoID, paoNome) {
     try {
-        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/18`);
+        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/${paoID}`);
 
         if (!response.ok) {
             console.error('Erro ao buscar ingredientes do pão:', response.statusText);
@@ -254,6 +254,12 @@ async function mostrarIngredientesPao(paoNome) {
             tableBody.appendChild(row);
         });
 
+        const btnCalcular = document.querySelector('.btnPercentualAguaGelo');
+        btnCalcular.id = 'pao-${paoID}';
+        btnCalcular.addEventListener('click', async function () {
+            await calcularIngredientes(paoID, paoNome);            
+        });
+
         const modalTitle = document.getElementById('modalTitle');
         modalTitle.textContent = `${paoNome}`;
 
@@ -262,85 +268,109 @@ async function mostrarIngredientesPao(paoNome) {
     }
 }
 
-// Função para obter um objeto Pao com base no nome do pão
-async function obterPaoPorNome(paoNome) {
-    try {
-        // Fazer uma requisição GET para a API com o nome do pão
-        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/nome/${paoNome}`);
+//     try {
+//         // Fazer uma requisição GET para a API com o nome do pão
+//         const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/nome/${paoNome}`);
         
-        // Verificar se a resposta está OK
-        if (!response.ok) {
-            throw new Error('Erro ao buscar o pão: ' + response.statusText);
+//         // Verificar se a resposta está OK
+//         if (!response.ok) {
+//             throw new Error('Erro ao buscar o pão: ' + response.statusText);
+//         }
+
+//         const paoData = await response.json();
+
+//         // Verificar se paoData é um array não vazio
+//         if (!Array.isArray(paoData) || paoData.length === 0) {
+//             throw new Error('Dados de pão inválidos ou ausentes');
+//         }
+
+//         const ingredientes = [];
+//         const percentuais = [];
+
+//         paoData.forEach(ingrediente => {
+//             ingredientes.push({ nome: ingrediente.nome });
+//             percentuais.push(ingrediente.percentual);
+//         });
+
+//         const pao = new Pao(paoNome, '', percentuais, ingredientes);
+
+//         return pao;
+
+//     } catch (error) {
+//         console.error('Erro ao obter pão por nome:', error);
+//         return null; // Retornar null em caso de erro
+//     }
+// }
+
+async function calcularIngredientes(paoID, paoNome) {
+    let pesoMassa =0;
+    const table = document.getElementById('tableCalculadora');
+    const percentualAguaGelo = parseFloat((document.getElementById('inputPercentualAguaGelo') as HTMLInputElement).value);
+    let nomesPaes: [String, Number][] = [];
+    let quantidadePaes= 0;
+    let pesoUnitario = 0;
+
+    const tbody = table.querySelector('tbody')
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    for (const row of rows) {
+        const cells = row.querySelectorAll("td");
+
+        const nomeInput = cells[0].querySelector("input") as HTMLInputElement;
+        const quantidadeInput = cells[1].querySelector("input") as HTMLInputElement;
+        const pesoInput = cells[2].querySelector("input") as HTMLInputElement;
+
+        if (!nomeInput || !quantidadeInput || !pesoInput) {
+            continue;
         }
 
-        // Converter a resposta para JSON
-        const paoData = await response.json();
+        const nome = nomeInput.value;
+        const quantidade = parseFloat(quantidadeInput.value);
+        const peso = parseFloat(pesoInput.value);
 
-        // Verificar se paoData é um array não vazio
-        if (!Array.isArray(paoData) || paoData.length === 0) {
-            throw new Error('Dados de pão inválidos ou ausentes');
+        if (nome.trim() === "") {
+            alert("Por favor, insira um nome");
+            return;
         }
 
-        // Inicializar arrays para armazenar os ingredientes e percentuais
-        const ingredientes = [];
-        const percentuais = [];
+        if (isNaN(peso) || isNaN(quantidade)) {
+            alert("Por favor, insira um peso válido para o quantidade ou peso.");
+            return;
+        }
 
-        // Mapear `paoData` para criar os arrays de `ingredientes` e `percentuais`
-        paoData.forEach(ingrediente => {
-            ingredientes.push({ nome: ingrediente.nome });
-            percentuais.push(ingrediente.percentual);
-        });
-
-        // Criar um objeto `Pao` com os dados recebidos
-        const pao = new Pao(paoNome, '', percentuais, ingredientes);
-
-        // Retornar o objeto `Pao`
-        return pao;
-
-    } catch (error) {
-        console.error('Erro ao obter pão por nome:', error);
-        return null; // Retornar null em caso de erro
+        nomesPaes.push([nome, quantidade]);
+        quantidadePaes = quantidade;
+        pesoUnitario = peso;
+        pesoMassa += (quantidadePaes * pesoUnitario / (570 * 56));
+        // console.log(quantidadePaes * pesoUnitario);
+        
     }
-}
 
-// Função para realizar o cálculo dos ingredientes ao clicar no botão "Calcular"
-async function calcularIngredientes() {
-    // Obter os valores de entrada do formulário
-    const quantidadePaes = parseFloat((document.getElementById('quantidadePaes') as HTMLInputElement).value);
-    const pesoUnitario = parseFloat((document.getElementById('pesoUnitario') as HTMLInputElement).value);
-    const percentualAguaGelo = parseFloat((document.getElementById('percentualAguaGelo') as HTMLInputElement).value);
 
-    // Obter o nome do pão atual no modal
-    const paoNome = document.getElementById('modalTitle').textContent;
+    if(isNaN(quantidadePaes) || isNaN(pesoUnitario) || isNaN(percentualAguaGelo)){
+        alert("Informe os campos corretamente.")
+        return
+    }
 
-    // Fazer uma requisição GET para a API com o nome do pão para obter os ingredientes
+    console.log(quantidadePaes, pesoUnitario);
+    
     try {
-        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/18`);
+        const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/${paoID}`);
         
-        // Verificar se a resposta está OK
         if (!response.ok) {
             throw new Error('Erro ao buscar ingredientes: ' + response.statusText);
         }
         
 
-        // Converter a resposta para JSON
         const ingredientesData = await response.json();
-        console.log('Ingredientes data:', ingredientesData, response.statusText);
 
-        // // Verificar se a resposta contém dados válidos
-        // if (!Array.isArray(ingredientesData) || ingredientesData.length === 0) {
-        //     throw new Error('Dados de ingredientes inválidos ou ausentes');
-        // }
-
-        // Inicializar um array para armazenar os resultados
         const resultados = [];
 
-        // Calcular os valores dos ingredientes
-        const pesoFarinhaDeTrigo = 20559.67 * (quantidadePaes * pesoUnitario / (570 * 56));
+        const pesoFarinhaDeTrigo = 20559.67 * pesoMassa;
         const proporcaoAguaEGelo = percentualAguaGelo / 100;
         const pesoAguaEGelo = proporcaoAguaEGelo * pesoFarinhaDeTrigo;
+console.log(pesoFarinhaDeTrigo);
 
-        // Calcular as quantidades dos ingredientes com base nos dados obtidos
         ingredientesData.forEach(ingrediente => {
             let quantidade;
             const percentual = ingrediente.percentual / 100;
@@ -357,13 +387,111 @@ async function calcularIngredientes() {
             });
         });
 
-        // Mostrar o resultado no console
-        console.log('Resultados do cálculo dos ingredientes:', resultados);
+        // console.log('Resultados do cálculo dos ingredientes do pão '+paoNome+':', resultados);
+
+        gerarPDF(nomesPaes,resultados, paoNome);
     } catch (error) {
         console.error('Erro ao calcular ingredientes:', error);
     }
 }
 
-// Adicione um evento de clique ao botão "Calcular"
-const botaoCalcular = document.getElementById('btnPercentualAguaGelo');
-botaoCalcular.addEventListener('click', calcularIngredientes);
+document.getElementById("addRowCalc").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    const table = document.getElementById("tableCalculadora") as HTMLTableElement;
+    
+    const row = table.insertRow(-1);
+    
+    const cell1 = row.insertCell(0);
+    const cell2 = row.insertCell(1);
+    const cell3 = row.insertCell(2);
+    const cell4 = row.insertCell(3);
+    
+    cell1.innerHTML = `<input type="text" class="form-control" id="nomePaoC" placeholder="Pão">`;
+    
+    cell2.innerHTML = `<input type="number" class="form-control" id="quantidadePaes" placeholder="Quantidade">`;
+    
+    cell3.innerHTML = `<input type="number" class="form-control" id="pesoUnitario" placeholder="Peso Unitário">`;
+
+    cell4.innerHTML = ` <button type="button" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>`;
+    
+    cell4.querySelector("button").addEventListener("click", function () {
+        row.remove();
+    });
+});
+
+
+async function gerarPDF(nomesPaes, resultados, nomePao) {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const title = `Receita ${nomePao}`;
+    const pageWidth = doc.internal.pageSize.width;
+    const titleWidth = doc.getTextWidth(title);
+    const titleX = (pageWidth - titleWidth) / 2;
+    const titleY = 20;
+
+    doc.text(title, titleX, titleY);
+
+    let yPosition = titleY + 20;
+
+    if (!Array.isArray(resultados)) {
+        console.error('Resultados não são um array válido');
+        return;
+    }
+
+    const drawTableBorders = (doc, xStart, yStart, width, height, numRows, numCols) => {
+        doc.rect(xStart, yStart, width, height);
+
+        const rowHeight = height / numRows;
+        for (let i = 1; i < numRows; i++) {
+            const y = yStart + (i * rowHeight);
+            doc.line(xStart, y, xStart + width, y);
+        }
+
+        const colWidth = width / numCols;
+        for (let i = 1; i < numCols; i++) {
+            const x = xStart + (i * colWidth);
+            doc.line(x, yStart, x, yStart + height);
+        }
+    };
+
+    for (let i = 0; i < nomesPaes.length; i++) {
+        const [nomePao, quantidade] = nomesPaes[i];
+
+        const linhaPao = `Pão: ${nomePao}   Quantidade: ${quantidade}`;
+        doc.text(linhaPao, 20, yPosition);
+        yPosition += 10;
+    }
+
+    doc.text("Ingrediente", 25, yPosition);
+    doc.text("Quantidade", 110, yPosition);
+    yPosition += 10;
+
+    const tableStartY = yPosition - 15;
+    const numCols = 2;
+    const numRows = resultados.length + 1; // Inclui cabeçalhos
+
+    resultados.forEach((ingrediente) => {
+        const ingredienteText = `${ingrediente.nome}`;
+        const quantidadeText = `${ingrediente.quantidade}`;
+
+        doc.text(ingredienteText, 25, yPosition);
+
+        doc.text(quantidadeText, 110, yPosition);
+
+        yPosition += 10;
+    });
+
+    drawTableBorders(doc, 20, tableStartY, pageWidth - 40, (numRows * 10), numRows, numCols);
+
+    yPosition += 20;
+
+    nomePao = nomePao.toLowerCase();
+    nomePao = nomePao.replace(" " || "-", "_");
+    const pdfDataUri = doc.output('datauristring');
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+
+}
