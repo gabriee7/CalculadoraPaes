@@ -10,12 +10,13 @@ document.getElementById("addRow").addEventListener("click", function (ev) {
     const cell2 = row.insertCell(1);
     const cell3 = row.insertCell(2);
     
-    cell1.innerHTML = `<input id="nomeIngredienteEscolha-1" list="ingredientes" class="form-control" placeholder="Escolha"><datalist id="ingredientes"></datalist>`;
+    cell1.innerHTML = `<input id="nomeIngredienteEscolha" list="ingredientes" class="form-control" placeholder="Escolha"><datalist id="ingredientes"></datalist>`;
     
     cell2.innerHTML = `<input type="number" step="0.01" class="form-control" placeholder="Percentual">`;
     
     cell3.innerHTML = ` <button type="button" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>`;
-    
+    const inputNomeIngrediente = cell1.querySelector('#nomeIngredienteEscolha') as HTMLInputElement;
+    inputNomeIngrediente.focus();
     cell3.querySelector("button").addEventListener("click", function () {
         row.remove();
     });
@@ -248,7 +249,8 @@ async function mostrarIngredientesPao(paoID, paoNome) {
             row.appendChild(cellNome);
             
             const cellPercentual = document.createElement('td');
-            cellPercentual.textContent = ingrediente.percentual;
+            cellPercentual.textContent = trataVirgula(ingrediente.percentual.toFixed(2));
+            cellPercentual.style.setProperty('text-align-last', 'end');
             row.appendChild(cellPercentual);
             
             tableBody.appendChild(row);
@@ -304,6 +306,7 @@ async function mostrarIngredientesPao(paoID, paoNome) {
 
 async function calcularIngredientes(paoID, paoNome) {
     let pesoMassa =0;
+    let pesoM = 0;
     const table = document.getElementById('tableCalculadora');
     const percentualAguaGelo = parseFloat((document.getElementById('inputPercentualAguaGelo') as HTMLInputElement).value);
     let nomesPaes: [String, Number][] = [];
@@ -341,18 +344,20 @@ async function calcularIngredientes(paoID, paoNome) {
         nomesPaes.push([nome, quantidade]);
         quantidadePaes = quantidade;
         pesoUnitario = peso;
-        pesoMassa += (quantidadePaes * pesoUnitario / (570 * 56));
-        // console.log(quantidadePaes * pesoUnitario);
+        pesoM += quantidade * peso;
+        // pesoMassa += (quantidadePaes * pesoUnitario / (570 * 56));
+        console.log(quantidade, peso, pesoM);
         
     }
-
+    pesoM+= 20;
+    // console.log(pesoM);
+    
 
     if(isNaN(quantidadePaes) || isNaN(pesoUnitario) || isNaN(percentualAguaGelo)){
         alert("Informe os campos corretamente.")
         return
     }
 
-    console.log(quantidadePaes, pesoUnitario);
     
     try {
         const response = await fetch(`http://localhost/api/app.php/pao_ingredientes/id/${paoID}`);
@@ -364,12 +369,25 @@ async function calcularIngredientes(paoID, paoNome) {
 
         const ingredientesData = await response.json();
 
+        //RECEITA NOVA
+        let percentualTotalIngredientes = 0;
+        ingredientesData.forEach(ingrediente => {
+            if(!compararStrings(ingrediente.nome, 'agua') && !compararStrings(ingrediente.nome, 'gelo') && !compararStrings(ingrediente.nome, 'Agua e gelo' )){
+                percentualTotalIngredientes += ingrediente.percentual;
+            }
+        })
+        percentualTotalIngredientes += percentualAguaGelo
+        console.log(percentualTotalIngredientes);
+        
+        console.log(`Percentual total de ingrediente: ${percentualTotalIngredientes} ||| ${(pesoM * 100)/ percentualTotalIngredientes}`);
+        
+        //FIM RECEITA NOVA (falta incluir a margem de sobra ex. 1.05)
+
         const resultados = [];
 
-        const pesoFarinhaDeTrigo = 20559.67 * pesoMassa;
+        const pesoFarinhaDeTrigo = (pesoM * 100)/ percentualTotalIngredientes;
         const proporcaoAguaEGelo = percentualAguaGelo / 100;
         const pesoAguaEGelo = proporcaoAguaEGelo * pesoFarinhaDeTrigo;
-console.log(pesoFarinhaDeTrigo);
 
         ingredientesData.forEach(ingrediente => {
             let quantidade;
@@ -377,6 +395,8 @@ console.log(pesoFarinhaDeTrigo);
 
             if (ingrediente.nome.toLowerCase() === 'água' || ingrediente.nome.toLowerCase() === 'gelo') {
                 quantidade = percentual * pesoAguaEGelo;
+            }else if(compararStrings(ingrediente.nome, 'agua e gelo')){
+                quantidade = proporcaoAguaEGelo * pesoFarinhaDeTrigo;
             } else {
                 quantidade = percentual * pesoFarinhaDeTrigo;
             }
@@ -414,6 +434,8 @@ document.getElementById("addRowCalc").addEventListener("click", function (ev) {
 
     cell4.innerHTML = ` <button type="button" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>`;
     
+    const inputNomePaoC = cell1.querySelector('#nomePaoC') as HTMLInputElement;
+    inputNomePaoC.focus();
     cell4.querySelector("button").addEventListener("click", function () {
         row.remove();
     });
@@ -451,7 +473,7 @@ async function gerarPDF(nomesPaes, resultados, nomePao) {
 
         const colWidth = width / numCols;
         for (let i = 1; i < numCols; i++) {
-            const x = xStart + (i * colWidth);
+            const x = xStart + (i * colWidth)+20;
             doc.line(x, yStart, x, yStart + height);
         }
     };
@@ -463,22 +485,24 @@ async function gerarPDF(nomesPaes, resultados, nomePao) {
         doc.text(linhaPao, 20, yPosition);
         yPosition += 10;
     }
+    yPosition += 2;
 
     doc.text("Ingrediente", 25, yPosition);
-    doc.text("Quantidade", 110, yPosition);
+    doc.text("Quantidade em Gramas", 127, yPosition);
     yPosition += 10;
 
-    const tableStartY = yPosition - 15;
+    const tableStartY = yPosition - 18;
     const numCols = 2;
     const numRows = resultados.length + 1; // Inclui cabeçalhos
 
     resultados.forEach((ingrediente) => {
         const ingredienteText = `${ingrediente.nome}`;
         const quantidadeText = `${ingrediente.quantidade}`;
+        
 
         doc.text(ingredienteText, 25, yPosition);
 
-        doc.text(quantidadeText, 110, yPosition);
+        doc.text(trataVirgula(quantidadeText), 133, yPosition);
 
         yPosition += 10;
     });
@@ -494,4 +518,20 @@ async function gerarPDF(nomesPaes, resultados, nomePao) {
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
 
+}
+
+function compararStrings(string1: string, string2: string): boolean {
+    const regex = new RegExp((string1 as any).normalize("NFD").replace(/[\u0300-\u036f]/g, ""), 'i');
+    return regex.test((string2 as any).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+}
+
+function trataVirgula(valor){
+    let newValor = valor.toString();
+    newValor = newValor.replace('.',',');
+    
+    if (newValor.length > 6) {
+        newValor = newValor.slice(0, -6) + '.' + newValor.slice(-6);
+    }
+    
+    return newValor;
 }
